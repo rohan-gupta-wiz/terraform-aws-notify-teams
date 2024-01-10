@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from urllib.request import Request, urlopen
+import urllib3
 from urllib.error import URLError, HTTPError
 
 HOOK_URL = os.environ['TEAMS_WEBHOOK_URL']
@@ -56,10 +56,9 @@ def lambda_handler(event, context):
       "text": data["text"]
     }
 
-    req = Request(HOOK_URL, json.dumps(message).encode('utf-8'))
     try:
-        response = urlopen(req)
-        response.read()
+        http = urllib3.PoolManager()
+        response = http.request('POST', HOOK_URL, body=json.dumps(message).encode('utf-8'))
         logger.info("Message posted")
     except HTTPError as e:
         logger.error("Request failed: %d %s", e.code, e.reason)
